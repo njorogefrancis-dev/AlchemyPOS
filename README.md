@@ -1,7 +1,43 @@
 # AlchemyPOS
 
-**Professional offline point-of-sale system for Linux**  
-Designed for Kenyan retail businesses. No internet. No subscription. No cloud.
+**Professional offline point-of-sale system**  
+Designed for retail businesses. No internet. No subscription. No cloud.
+
+---
+
+## Quick Start
+
+### Windows (Recommended)
+1. Install Python 3.8+ from https://www.python.org/downloads/
+   - **Important**: Check "Add Python to PATH" during installation
+2. Run `build.bat` from the project folder
+3. Execute `dist\AlchemyPOS.exe`
+
+### Linux / macOS
+```bash
+python3 -m pip install pyinstaller reportlab
+python3 main.py
+```
+
+---
+
+## Building for Distribution
+
+### Windows EXE Build
+```batch
+REM Full build with icon
+build.bat
+
+REM Clean all artifacts
+build.bat clean
+```
+
+Output: `dist\AlchemyPOS.exe` (~80MB standalone executable)
+
+**Requirements:**
+- Python 3.8+ (with pip)
+- PyInstaller: `pip install pyinstaller`
+- ReportLab: `pip install reportlab` (for PDF reports)
 
 ---
 
@@ -48,20 +84,11 @@ All other dependencies (`sqlite3`, `csv`, `zipfile`, `hashlib`) are part of the 
 unzip AlchemyPOS.zip
 cd alchemypos
 
-# 2. Run the installer (checks dependencies, initialises the database)
-bash install.sh
-
-# 3. Launch
-bash run.sh
-```
-
-To launch directly at any time:
-```bash
+# 2. Launch directly
 python3 main.py
 ```
 
-The installer only needs to be run once. `bash run.sh` is all you need from then on.
-
+For Windows, use the built EXE from `dist\AlchemyPOS.exe`
 ---
 
 ## First Launch
@@ -74,6 +101,23 @@ The first time AlchemyPOS starts, a **Setup Wizard** opens. There is no pre-inst
 3. Three security questions and answers (required for password self-recovery)
 
 Once the account is created, log in and go to **Settings** to configure your shop name, address, phone number, M-Pesa details, and tax rate before making any sales.
+
+---
+
+## Features
+
+- **Full offline operation** — No internet required
+- **Multi-role access control** — Cashier, Inventory Manager, Admin
+- **Product search & categorization** — Fast barcode + text search
+- **Dynamic pricing & discounts** — Per-transaction discounts
+- **Multiple payment methods** — Cash, M-Pesa, Paybill, Till, Send Money, Pochi
+- **Real-time inventory tracking** — Low-stock alerts
+- **Daily/weekly/monthly reports** — Revenue, profit, tax, payment breakdown
+- **Portable & distributable** — Single ~80MB EXE for Windows (no dependencies)
+- **Smooth scrolling** — Mouse wheel support across all windows
+- **Responsive UI** — Dark & light themes, 1280×720 minimum
+- **Secure authentication** — Hashed passwords, security questions
+- **Audit trail** — Full system log for compliance
 
 ---
 

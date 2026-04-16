@@ -165,6 +165,33 @@ def propagate_scroll(widget):
             _attach(child)
     _attach(widget)
 
+def scroll_canvas_to_content(canvas, content_frame):
+    """Helper to enable scroll propagation on a canvas. Call after populating content."""
+    def _pos_scroll(e):
+        if not canvas.winfo_ismapped(): return
+        canvas.yview_scroll(int(-1*(e.delta/120)),"units")
+    def _pos_up(e):
+        if canvas.winfo_ismapped(): canvas.yview_scroll(-1,"units")
+    def _pos_dn(e):
+        if canvas.winfo_ismapped(): canvas.yview_scroll(1,"units")
+    canvas.bind("<MouseWheel>", _pos_scroll)
+    canvas.bind("<Button-4>",   _pos_up)
+    canvas.bind("<Button-5>",   _pos_dn)
+    content_frame.bind("<MouseWheel>", _pos_scroll)
+    content_frame.bind("<Button-4>",   _pos_up)
+    content_frame.bind("<Button-5>",   _pos_dn)
+    # Propagate to all descendants
+    def _attach_to_children(w):
+        try:
+            w.bind("<MouseWheel>", _pos_scroll)
+            w.bind("<Button-4>",   _pos_up)
+            w.bind("<Button-5>",   _pos_dn)
+        except Exception:
+            pass
+        for child in w.winfo_children():
+            _attach_to_children(child)
+    _attach_to_children(content_frame)
+
 
 def apply_tv(name):
     s = ttk.Style(); s.theme_use("default")
@@ -657,6 +684,8 @@ class AlchemyPOS(tk.Tk):
         # Force canvas to recalculate scroll region after drawing all cards
         self._pg.update_idletasks()
         self._pc.config(scrollregion=self._pc.bbox("all"))
+        # Enable scroll propagation to product cards
+        self.after(50, lambda: scroll_canvas_to_content(self._pc, self._pg))
 
     def _refresh_stock_badges(self):
         """Re-fetch stock from DB and update badges in-place — no widget destroy."""
@@ -719,6 +748,7 @@ class AlchemyPOS(tk.Tk):
         if not self._cart:
             lbl(self._ci,"Cart is empty\n\nClick a product to add it.",10,
                 color=T["TEXT3"],bg=T["SIDEBAR"],justify="center").pack(pady=30,padx=10)
+            self._cc.config(scrollregion=self._cc.bbox("all"))
             return
         for i, item in enumerate(self._cart):
             row = tk.Frame(self._ci,bg=T["CARD2"],highlightbackground=T["BORDER"],highlightthickness=1)
@@ -742,6 +772,10 @@ class AlchemyPOS(tk.Tk):
                 return f
             for txt,fn,sty in [("✕",mk_rm(),"red"),("−",mk_dec(),"dark"),("＋",mk_inc(),"dark")]:
                 btn(ctrl,txt,fn,sty,(7,3)).pack(side="right",padx=2)
+        # Update scroll region and propagate scroll to cart items
+        self._ci.update_idletasks()
+        self._cc.config(scrollregion=self._cc.bbox("all"))
+        self.after(30, lambda: scroll_canvas_to_content(self._cc, self._ci))
 
     def _recalc(self):
         try: d = float(self._dv.get() or 0)

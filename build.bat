@@ -7,10 +7,21 @@ REM ============================================================================
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
+if /I "%~1"=="clean" (
+    echo [INFO] Cleaning generated artifacts...
+    if exist "build" rmdir /s /q build >nul 2>&1
+    if exist "dist" rmdir /s /q dist >nul 2>&1
+    if exist "venv" rmdir /s /q venv >nul 2>&1
+    for /d /r . %%d in (__pycache__) do if exist "%%d" rmdir /s /q "%%d" >nul 2>&1
+    del /s /q *.pyc >nul 2>&1
+    echo [OK] Clean complete
+    exit /b 0
+)
+
 echo.
 echo ╔══════════════════════════════════════════════════════════════════════════╗
 echo ║                   AlchemyPOS Windows Build Script                        ║
-echo ║               Build EXE and Installer for Distribution                   ║
+echo ║               Build EXE and Installer for Windows Distribution           ║
 echo ╚══════════════════════════════════════════════════════════════════════════╝
 echo.
 
@@ -31,38 +42,15 @@ echo [OK] %PYTHON_VERSION%
 echo.
 
 REM ─────────────────────────────────────────────────────────────────────────
-REM Setup Virtual Environment
+REM Install Build Dependencies
 REM ─────────────────────────────────────────────────────────────────────────
-if not exist "venv" (
-    echo [INFO] Creating virtual environment...
-    python -m venv venv
-) else (
-    echo [OK] Virtual environment exists
-)
-echo.
-
-REM ─────────────────────────────────────────────────────────────────────────
-REM Activate Virtual Environment
-REM ─────────────────────────────────────────────────────────────────────────
-echo [INFO] Activating virtual environment...
-call venv\Scripts\activate.bat
-if errorlevel 1 (
-    echo [ERROR] Failed to activate virtual environment
-    pause
-    exit /b 1
-)
-echo [OK] Virtual environment activated
-echo.
-
-REM ─────────────────────────────────────────────────────────────────────────
-REM Install Dependencies
-REM ─────────────────────────────────────────────────────────────────────────
-echo [INFO] Installing required packages...
-pip install --upgrade pip setuptools wheel >nul 2>&1
-pip install pyinstaller reportlab >nul 2>&1
+echo [INFO] Installing build dependencies...
+python -m pip install --upgrade pip
+python -m pip install pyinstaller reportlab
 
 if errorlevel 1 (
     echo [ERROR] Failed to install dependencies
+    echo [INFO] Try: python -m pip install pyinstaller reportlab
     pause
     exit /b 1
 )
@@ -75,7 +63,9 @@ REM ─────────────────────────�
 echo [INFO] Cleaning previous builds...
 if exist "build" rmdir /s /q build >nul 2>&1
 if exist "dist" rmdir /s /q dist >nul 2>&1
-if exist "__pycache__" rmdir /s /q __pycache__ >nul 2>&1
+if exist "venv" rmdir /s /q venv >nul 2>&1
+for /d /r . %%d in (__pycache__) do if exist "%%d" rmdir /s /q "%%d" >nul 2>&1
+del /s /q *.pyc >nul 2>&1
 echo [OK] Clean complete
 echo.
 
@@ -85,14 +75,22 @@ REM ─────────────────────────�
 echo [INFO] Building EXE with PyInstaller...
 echo.
 
-pyinstaller ^
+set "SETUP_DIR=%cd%\setup_files"
+set "ICON_ARG="
+if exist "%SETUP_DIR%\icon.ico" (
+    set "ICON_ARG=--icon=%SETUP_DIR%\icon.ico"
+) else (
+    echo [WARN] Icon file not found, building without custom icon.
+)
+
+python -m PyInstaller ^
     --name "AlchemyPOS" ^
     --onefile ^
     --windowed ^
-    --icon=setup_files\icon.ico ^
-    --add-data "setup_files;setup_files" ^
+    %ICON_ARG% ^
+    --add-data "%SETUP_DIR%;setup_files" ^
     --distpath "dist" ^
-    --buildpath "build" ^
+    --workpath "build" ^
     --specpath "build" ^
     main.py
 
@@ -110,11 +108,9 @@ REM ─────────────────────────�
 if not exist "setup_files\installer.nsi" (
     echo [WARN] NSIS installer script not found at setup_files\installer.nsi
     echo [INFO] To create an installer, install NSIS from: https://nsis.sourceforge.io/
-    echo [INFO] Then run NSIS: "C:\Program Files (x86)\NSIS\makensis.exe" setup_files\installer.nsi
 ) else (
     echo [INFO] Building installer with NSIS...
     
-    REM Check if NSIS is installed
     if exist "C:\Program Files (x86)\NSIS\makensis.exe" (
         "C:\Program Files (x86)\NSIS\makensis.exe" setup_files\installer.nsi
         if errorlevel 1 (
@@ -132,9 +128,8 @@ if not exist "setup_files\installer.nsi" (
         )
         echo [OK] Installer created
     ) else (
-        echo [WARN] NSIS not found, skipping installer creation
+        echo [WARN] NSIS not found at standard locations
         echo [INFO] Install NSIS from: https://nsis.sourceforge.io/
-        echo [INFO] Then manually run: makensis setup_files\installer.nsi
     )
 )
 echo.
@@ -151,6 +146,7 @@ if exist "dist\AlchemyPOS_Installer.exe" (
     echo [OUTPUT] Installer: dist\AlchemyPOS_Installer.exe
 )
 echo.
-echo [NEXT] Distribution files ready in the 'dist' folder
+echo [READY] To run: dist\AlchemyPOS.exe
+echo [HINT] Use: build.bat clean  (to remove generated build artifacts)
 echo.
 pause

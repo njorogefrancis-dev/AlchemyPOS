@@ -4,3 +4,8 @@ node_modules/
 .env
 *.log
 *.db
+build/
+dist/
+venv/
+__pycache__/
+*.pyc
