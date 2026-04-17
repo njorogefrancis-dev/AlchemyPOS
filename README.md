@@ -34,6 +34,8 @@ build.bat clean
 
 Output: `dist\AlchemyPOS.exe` (~80MB standalone executable)
 
+The Windows build script automatically embeds `setup_files\app.manifest` when present, enabling native Per-Monitor DPI awareness for sharper text on high-DPI displays.
+
 **Requirements:**
 - Python 3.8+ (with pip)
 - PyInstaller: `pip install pyinstaller`
@@ -66,9 +68,9 @@ Output: `dist\AlchemyPOS.exe` (~80MB standalone executable)
 
 | Component | Requirement |
 |-----------|-------------|
-| OS | Linux (Kali, Ubuntu 20.04+, Debian 11+) |
+| OS | Windows 10/11, Linux (Kali, Ubuntu 20.04+, Debian 11+) |
 | Python | 3.8 or later |
-| Tkinter | `sudo apt install python3-tk` |
+| Tkinter | Bundled with most Python installers (Linux: `sudo apt install python3-tk`) |
 | ReportLab | `pip install reportlab --break-system-packages` *(PDF export only — optional)* |
 | Display | 1280 × 720 minimum |
 | Disk | 100 MB free |
@@ -445,6 +447,9 @@ Run `bash install.sh` again or `python3 -c "from database.db import init_databas
 
 **Screen layout is clipped**  
 Minimum supported resolution is 1280 × 720. Maximise the window or increase display resolution. All panels and dialogs are independently scrollable.
+
+**Text/UI looks blurry on Windows**  
+Use a fresh EXE built with `build.bat` (includes DPI manifest support). The app also enables Windows DPI awareness at startup and uses `Segoe UI` on Windows for cleaner native text rendering.
 
 **Application opens but shows a blank white window**  
 This is a Tkinter/compositor conflict on some window managers. Try:

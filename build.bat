@@ -77,10 +77,17 @@ echo.
 
 set "SETUP_DIR=%cd%\setup_files"
 set "ICON_ARG="
+set "MANIFEST_ARG="
 if exist "%SETUP_DIR%\icon.ico" (
     set "ICON_ARG=--icon=%SETUP_DIR%\icon.ico"
 ) else (
     echo [WARN] Icon file not found, building without custom icon.
+)
+if exist "%SETUP_DIR%\app.manifest" (
+    set "MANIFEST_ARG=--manifest=%SETUP_DIR%\app.manifest"
+    echo [OK] DPI manifest found: %SETUP_DIR%\app.manifest
+) else (
+    echo [WARN] App manifest not found, building without explicit DPI manifest.
 )
 
 python -m PyInstaller ^
@@ -88,6 +95,7 @@ python -m PyInstaller ^
     --onefile ^
     --windowed ^
     %ICON_ARG% ^
+    %MANIFEST_ARG% ^
     --add-data "%SETUP_DIR%;setup_files" ^
     --distpath "dist" ^
     --workpath "build" ^

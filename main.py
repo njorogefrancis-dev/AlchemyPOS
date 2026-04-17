@@ -2,6 +2,7 @@
 """AlchemyPOS — Professional Point of Sale System"""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ctypes
 
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog, filedialog
@@ -42,8 +43,41 @@ def apply_theme(name):
     T.update(THEMES.get(name, THEMES["dark"]))
     set_setting("theme", name)
 
+def _is_windows():
+    return sys.platform.startswith("win")
+
+def _enable_windows_dpi_awareness():
+    """Enable per-monitor DPI awareness on Windows (safe no-op elsewhere)."""
+    if not _is_windows():
+        return
+    try:
+        user32 = ctypes.windll.user32
+        # Windows 10/11 preferred mode: Per-Monitor v2
+        if hasattr(user32, "SetProcessDpiAwarenessContext"):
+            try:
+                DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = ctypes.c_void_p(-4)
+                if user32.SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2):
+                    return
+            except Exception:
+                pass
+        # Windows 8.1 fallback
+        try:
+            shcore = ctypes.windll.shcore
+            if hasattr(shcore, "SetProcessDpiAwareness"):
+                shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE
+                return
+        except Exception:
+            pass
+        # Legacy fallback (Vista+)
+        if hasattr(user32, "SetProcessDPIAware"):
+            user32.SetProcessDPIAware()
+    except Exception:
+        # Keep startup resilient even if DPI API calls fail.
+        pass
+
 def F(sz, bold=False):
-    return ("Courier New", sz, "bold" if bold else "normal")
+    family = "Segoe UI" if _is_windows() else "Courier New"
+    return (family, sz, "bold" if bold else "normal")
 
 PALS = {}
 def _make_pals():
@@ -110,7 +144,7 @@ def _watermark(parent, bg=None):
     fg = T.get("TEXT3","#484F58")
     tk.Label(parent,
              text="Developer: njorogefrancis  |  njorogefrancis.dev@gmail.com  |  0115634345",
-             font=("Courier New", 7), fg=fg, bg=bg,
+             font=F(7), fg=fg, bg=bg,
              anchor="center").pack(side="bottom", fill="x", pady=(1,2), padx=4)
 
 def scrolled_frame(parent, bg=None):
@@ -2222,4 +2256,5 @@ class AlchemyPOS(tk.Tk):
 
 
 if __name__ == "__main__":
+    _enable_windows_dpi_awareness()
     AlchemyPOS()
