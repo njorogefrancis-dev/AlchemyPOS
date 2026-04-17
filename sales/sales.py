@@ -21,15 +21,16 @@ class SalesManager:
 
         change = round(amount_tendered - total, 2)
         receipt_num = generate_receipt_number()
+        sale_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         conn = get_connection()
         try:
             c = conn.cursor()
             c.execute("""INSERT INTO sales(receipt_number,cashier_id,subtotal,discount,tax,total,
-                         payment_method,amount_tendered,change_given)
-                         VALUES(?,?,?,?,?,?,?,?,?)""",
+                         payment_method,amount_tendered,change_given,created_at)
+                         VALUES(?,?,?,?,?,?,?,?,?,?)""",
                       (receipt_num, cashier_id, subtotal, discount_amt, tax_amt, total,
-                       payment_method, amount_tendered, change))
+                       payment_method, amount_tendered, change, sale_time))
             sale_id = c.lastrowid
 
             for item in cart_items:
@@ -56,7 +57,7 @@ class SalesManager:
                 "payment_method": payment_method,
                 "amount_tendered": amount_tendered,
                 "change": change,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "created_at": sale_time,
             }
             return True, "Sale completed.", sale_data
         except Exception as e:

@@ -70,6 +70,19 @@ echo [OK] Clean complete
 echo.
 
 REM ─────────────────────────────────────────────────────────────────────────
+REM Validate Source Files
+REM ─────────────────────────────────────────────────────────────────────────
+echo [INFO] Validating Python source syntax...
+python -m py_compile main.py inventory\inventory.py sales\sales.py authentication\auth.py reporting\reports.py backup_manager\backup.py database\db.py
+if errorlevel 1 (
+    echo [ERROR] Syntax validation failed. Fix Python errors before building.
+    pause
+    exit /b 1
+)
+echo [OK] Syntax validation passed
+echo.
+
+REM ─────────────────────────────────────────────────────────────────────────
 REM Build EXE with PyInstaller
 REM ─────────────────────────────────────────────────────────────────────────
 echo [INFO] Building EXE with PyInstaller...

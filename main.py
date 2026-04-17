@@ -417,7 +417,7 @@ class AlchemyPOS(tk.Tk):
             return
         win = tk.Toplevel(self); win.title("Reset Password")
         win.configure(bg=T["BG"]); win.geometry("460x520")
-        win.transient(self); win.resizable(False, False); win.after(50, lambda: win.grab_set() if win.winfo_exists() else None)
+        win.resizable(False, False); self._setup_popup(win)
         _watermark(win)
 
         outer, inner = scrolled_frame(win, bg=T["BG"])
@@ -503,6 +503,28 @@ class AlchemyPOS(tk.Tk):
         messagebox.showinfo("Theme Changed",
                             f"Switched to {new.title()} theme.\nRestart AlchemyPOS to apply fully.",
                             parent=self)
+
+    def _center_popup(self, win):
+        """Center a popup relative to the main window."""
+        try:
+            win.update_idletasks()
+            w = win.winfo_width() or win.winfo_reqwidth()
+            h = win.winfo_height() or win.winfo_reqheight()
+            px = self.winfo_rootx()
+            py = self.winfo_rooty()
+            pw = self.winfo_width()
+            ph = self.winfo_height()
+            x = px + max(0, (pw - w) // 2)
+            y = py + max(0, (ph - h) // 2)
+            win.geometry(f"{w}x{h}+{x}+{y}")
+        except Exception:
+            pass
+
+    def _setup_popup(self, win):
+        """Apply shared behavior for all app popups."""
+        win.transient(self)
+        win.after(50, lambda: win.grab_set() if win.winfo_exists() else None)
+        win.after(60, lambda: self._center_popup(win) if win.winfo_exists() else None)
 
     def _tick(self):
         self._clk.set(datetime.now().strftime("%a %d %b %Y   %H:%M:%S"))
@@ -804,7 +826,7 @@ class AlchemyPOS(tk.Tk):
             def mk_inc(idx=i):
                 def f(): self._cart[idx]["qty"]+=1; self._render_cart(); self._recalc()
                 return f
-            for txt,fn,sty in [("✕",mk_rm(),"red"),("−",mk_dec(),"dark"),("＋",mk_inc(),"dark")]:
+            for txt,fn,sty in [("x",mk_rm(),"red"),("-",mk_dec(),"dark"),("+",mk_inc(),"dark")]:
                 btn(ctrl,txt,fn,sty,(7,3)).pack(side="right",padx=2)
         # Update scroll region and propagate scroll to cart items
         self._ci.update_idletasks()
@@ -854,7 +876,7 @@ class AlchemyPOS(tk.Tk):
 
         win = tk.Toplevel(self); win.title(f"Payment — {label}")
         win.configure(bg=T["BG"]); win.geometry("440x560")
-        win.transient(self); win.resizable(True,True); win.after(50, lambda: win.grab_set() if win.winfo_exists() else None)
+        win.resizable(True,True); self._setup_popup(win)
         win.minsize(380, 400)
         _watermark(win)
 
@@ -945,7 +967,7 @@ class AlchemyPOS(tk.Tk):
         sym=self._sym
 
         win=tk.Toplevel(self); win.title("Receipt"); win.configure(bg=T["BG"])
-        win.geometry("400x680"); win.transient(self); win.resizable(True,True)
+        win.geometry("400x680"); win.resizable(True,True); self._setup_popup(win)
 
         # Pin watermark + buttons at bottom BEFORE canvas so pack order is right
         _watermark(win)
@@ -1319,7 +1341,7 @@ class AlchemyPOS(tk.Tk):
     def _stock_dialog(self, p):
         sym=get_setting("currency_symbol","KSh")
         win=tk.Toplevel(self); win.title("Adjust Stock"); win.configure(bg=T["BG"])
-        win.geometry("360x340"); win.transient(self); win.resizable(False,False); win.after(50, lambda: win.grab_set() if win.winfo_exists() else None)
+        win.geometry("420x430"); win.resizable(True,True); win.minsize(380,390); self._setup_popup(win)
         lbl(win,"ADJUST STOCK",14,True,T["ACCENT"],bg=T["BG"]).pack(pady=(20,4))
         lbl(win,p["name"],11,True,bg=T["BG"]).pack()
         lbl(win,f"Current: {p.get('quantity',0):.0f} {p.get('unit','pcs')}",9,color=T["TEXT3"],bg=T["BG"]).pack(pady=(2,16))
@@ -1344,15 +1366,15 @@ class AlchemyPOS(tk.Tk):
             if hasattr(self,"_build_stock_alerts"): self._build_stock_alerts()
             p2=inventory_manager.get_product_by_id(p["id"])
             if p2: self._show_detail_panel(p2)
-        btn(bf,"＋  ADD STOCK",  lambda: do_adj(+1),"green", (0,0)).pack(fill="x",ipady=9,pady=(0,4))
-        btn(bf,"−  REMOVE STOCK",lambda: do_adj(-1),"red",   (0,0)).pack(fill="x",ipady=9,pady=(0,4))
+        btn(bf,"ADD STOCK",  lambda: do_adj(+1),"green", (0,0)).pack(fill="x",ipady=9,pady=(0,4))
+        btn(bf,"REMOVE STOCK",lambda: do_adj(-1),"red",   (0,0)).pack(fill="x",ipady=9,pady=(0,4))
         btn(bf,"Cancel",win.destroy,"ghost").pack(fill="x")
 
     def _prod_dialog(self, product=None):
         editing=product is not None
         win=tk.Toplevel(self); win.title("Edit Product" if editing else "Add Product")
         win.configure(bg=T["BG"]); win.geometry("520x580")
-        win.transient(self); win.resizable(True,True); win.after(50, lambda: win.grab_set() if win.winfo_exists() else None)
+        win.resizable(True,True); self._setup_popup(win)
         win.minsize(440, 400)
         _watermark(win)
         lbl(win,"EDIT PRODUCT" if editing else "NEW PRODUCT",14,True,T["ACCENT"],bg=T["BG"]).pack(pady=(20,14))
@@ -1730,7 +1752,7 @@ class AlchemyPOS(tk.Tk):
         editing=user is not None
         win=tk.Toplevel(self); win.title("Edit User" if editing else "Add User")
         win.configure(bg=T["BG"]); win.geometry("480x620")
-        win.transient(self); win.resizable(True,True); win.after(50, lambda: win.grab_set() if win.winfo_exists() else None)
+        win.resizable(True,True); self._setup_popup(win)
         win.minsize(420, 400)
         _watermark(win)
         lbl(win,"EDIT USER" if editing else "NEW USER",14,True,T["ACCENT"],bg=T["BG"]).pack(pady=(20,14))
@@ -2097,8 +2119,7 @@ class AlchemyPOS(tk.Tk):
 
         win = tk.Toplevel(self); win.title("Select Date")
         win.configure(bg=T["BG"]); win.resizable(False, False)
-        win.transient(self); win.after(50, lambda: win.grab_set() if win.winfo_exists() else None)
-        win.geometry("+%d+%d" % (self.winfo_rootx()+200, self.winfo_rooty()+120))
+        win.geometry("340x320"); self._setup_popup(win)
         _watermark(win)
 
         state = {"y": y, "m": m}
@@ -2169,7 +2190,7 @@ class AlchemyPOS(tk.Tk):
 
         win = tk.Toplevel(self); win.title(f"Receipt — {receipt_num}")
         win.configure(bg=T["BG"]); win.geometry("500x600")
-        win.transient(self); win.resizable(True, True)
+        win.resizable(True, True); self._setup_popup(win)
         win.minsize(420, 400)
 
         # Watermark + buttons pinned at bottom BEFORE scrollable content
