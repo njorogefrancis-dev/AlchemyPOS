@@ -85,8 +85,10 @@ if exist "%SETUP_DIR%\icon.ico" (
 )
 if exist "%SETUP_DIR%\app.manifest" (
     set "MANIFEST_ARG=--manifest=%SETUP_DIR%\app.manifest"
+    set "DPI_MANIFEST_STATUS=Enabled"
     echo [OK] DPI manifest found: %SETUP_DIR%\app.manifest
 ) else (
+    set "DPI_MANIFEST_STATUS=Not found (using runtime DPI API only)"
     echo [WARN] App manifest not found, building without explicit DPI manifest.
 )
 
@@ -150,6 +152,7 @@ echo ║                        BUILD COMPLETE                                  
 echo ╚══════════════════════════════════════════════════════════════════════════╝
 echo.
 echo [OUTPUT] Executable: dist\AlchemyPOS.exe
+echo [INFO] DPI manifest: %DPI_MANIFEST_STATUS%
 if exist "dist\AlchemyPOS_Installer.exe" (
     echo [OUTPUT] Installer: dist\AlchemyPOS_Installer.exe
 )

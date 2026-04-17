@@ -451,6 +451,9 @@ Minimum supported resolution is 1280 × 720. Maximise the window or increase dis
 **Text/UI looks blurry on Windows**  
 Use a fresh EXE built with `build.bat` (includes DPI manifest support). The app also enables Windows DPI awareness at startup and uses `Segoe UI` on Windows for cleaner native text rendering.
 
+**Inventory stock adjust does nothing**  
+Stock changes now validate numeric input and show a clear error message if an update fails. If this happens, reopen the selected product and retry with a positive number in the stock adjust field.
+
 **Application opens but shows a blank white window**  
 This is a Tkinter/compositor conflict on some window managers. Try:
 ```bash

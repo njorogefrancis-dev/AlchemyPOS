@@ -1246,7 +1246,12 @@ class AlchemyPOS(tk.Tk):
             try: delta=float(av.get() or 0)
             except: messagebox.showerror("Error","Enter a valid number.",parent=self); return
             if delta<=0: messagebox.showerror("Error","Enter a positive number.",parent=self); return
-            inventory_manager.adjust_stock(p["id"],delta,auth.current_user["id"],auth.current_user["username"],"Manual add")
+            ok,msg = inventory_manager.adjust_stock(
+                p["id"], delta, auth.current_user["id"], auth.current_user["username"], "Manual add"
+            )
+            if not ok:
+                messagebox.showerror("Stock Update Failed", msg, parent=self)
+                return
             av.set(""); self._inv_load(); self._build_stock_alerts()
             p2=inventory_manager.get_product_by_id(p["id"])
             if p2: self._show_detail_panel(p2)
@@ -1255,7 +1260,12 @@ class AlchemyPOS(tk.Tk):
             try: delta=float(av.get() or 0)
             except: messagebox.showerror("Error","Enter a valid number.",parent=self); return
             if delta<=0: messagebox.showerror("Error","Enter a positive number.",parent=self); return
-            inventory_manager.adjust_stock(p["id"],-delta,auth.current_user["id"],auth.current_user["username"],"Manual remove")
+            ok,msg = inventory_manager.adjust_stock(
+                p["id"], -delta, auth.current_user["id"], auth.current_user["username"], "Manual remove"
+            )
+            if not ok:
+                messagebox.showerror("Stock Update Failed", msg, parent=self)
+                return
             av.set(""); self._inv_load(); self._build_stock_alerts()
             p2=inventory_manager.get_product_by_id(p["id"])
             if p2: self._show_detail_panel(p2)
@@ -1324,8 +1334,12 @@ class AlchemyPOS(tk.Tk):
             try: delta=float(av.get() or 0)
             except: ev.set("Enter a valid number."); return
             if delta<=0: ev.set("Enter a positive number."); return
-            inventory_manager.adjust_stock(p["id"],sign*delta,
-                auth.current_user["id"],auth.current_user["username"],rv.get())
+            ok, msg = inventory_manager.adjust_stock(
+                p["id"], sign*delta, auth.current_user["id"], auth.current_user["username"], rv.get()
+            )
+            if not ok:
+                ev.set(msg)
+                return
             win.destroy(); self._inv_load()
             if hasattr(self,"_build_stock_alerts"): self._build_stock_alerts()
             p2=inventory_manager.get_product_by_id(p["id"])

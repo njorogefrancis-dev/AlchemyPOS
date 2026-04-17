@@ -109,9 +109,21 @@ class InventoryManager:
     def adjust_stock(self, product_id, delta, user_id=None, username=None, reason=""):
         conn = get_connection()
         try:
+            try:
+                product_id = int(product_id)
+            except (TypeError, ValueError):
+                return False, "Invalid product id."
+            try:
+                delta = float(delta)
+            except (TypeError, ValueError):
+                return False, "Invalid stock quantity."
+            if delta == 0:
+                return False, "Quantity change cannot be zero."
+
             existing = conn.execute("SELECT id, quantity FROM inventory WHERE product_id=?", (product_id,)).fetchone()
             if existing:
-                new_qty = max(0, existing["quantity"] + delta)
+                current_qty = float(existing["quantity"] or 0)
+                new_qty = max(0, current_qty + delta)
                 conn.execute("UPDATE inventory SET quantity=?,last_updated=datetime('now') WHERE product_id=?",
                              (new_qty, product_id))
             else:
@@ -120,8 +132,8 @@ class InventoryManager:
             conn.commit()
             if user_id:
                 log_action(user_id, username or "", "STOCK_ADJUST",
-                           f"pid={product_id} delta={delta:+.0f} reason={reason or 'N/A'}")
-            return True, "Stock updated."
+                           f"pid={product_id} delta={delta:+.2f} reason={reason or 'N/A'}")
+            return True, "Stock updated successfully."
         except Exception as e:
             conn.rollback()
             return False, str(e)
